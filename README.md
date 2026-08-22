@@ -1,140 +1,136 @@
 # dotpi
 
-My [pi](https://github.com/badlogic/pi-mono) setup.
+My [pi](https://github.com/earendil-works/pi) setup — the contents of `~/.pi/agent`
+that are worth version control.
 
 ## Structure
 
 ```
 ~/.pi/agent/
-├── SYSTEM.md              # Custom system prompt
-├── settings.json          # Model, packages, preferences
-├── napkin.json            # Global vault path for napkin extensions
+├── AGENTS.md              # Voice and working standards, applied to every session
+├── SYSTEM.md              # Custom system prompt, replacing pi's default
+├── settings.json          # Model, thinking level, installed packages
 ├── extensions/
-│   └── pi-docs.ts         # Injects date, cwd, and pi docs each turn
+│   └── no-sed-edit.ts     # Refuses sed file edits; directs to the edit tool
 ├── reminders/
-│   └── read-fully.ts      # Nudges to read files fully after search ops
-└── kb/                    # Knowledge base (napkin vault)
-    ├── .napkin/           # Vault config
-    │   └── config.json
-    ├── NAPKIN.md          # Context note (Level 0)
-    ├── Templates/         # Note templates
-    ├── decisions/
-    ├── architecture/
-    ├── guides/
-    ├── changelog/
-    ├── projects/
-    └── daily/
+│   └── read-fully.ts      # Nudges toward full reads after repeated searching
+└── prompts/
+    ├── reread.md          # /reread — reread changed code and bring it to standard
+    └── taxonomy.md        # /taxonomy — find and fix closed-set ownership drift
 ```
 
-## System Prompt
+Not tracked here: `auth.json` and `models.json` hold credentials; `runline.json`,
+`trust.json` and `keybindings.json` are machine-specific; and `sessions/`,
+`recall/`, `peers/`, `npm/`, `git/` and `bin/` are runtime state. All of it is
+listed in `.gitignore` so a stray copy cannot be committed by accident.
 
-Custom `SYSTEM.md` — replaces pi's default system prompt with a trimmed version. Pi still appends date, cwd, skills, and context files automatically.
+`settings.json` is safe to track — it holds no credentials, and its package
+paths are relative to `~/.pi/agent`, so they carry no username.
 
-Key changes from default:
-- Removed pi documentation section (moved to `pi-docs.ts` extension)
-- Static tool/guidelines list for the core 4 tools (read, bash, edit, write)
+## AGENTS.md
 
-## Extension: pi-docs.ts
+The behavioral contract, and the file with the most influence over how a session
+reads. It covers voice, the shape of status and completion replies, how to
+disagree and how to accept a correction, surgical edits against full reads,
+honest reporting of test and verification results, running the verification gate
+before claiming completion, tmux for background work, and reaching Linear
+through Runline.
 
-Injects a hidden message every turn via `before_agent_start` containing:
-- Current date
-- Current working directory
-- Pi documentation pointers (paths to docs, examples, and topic index)
+pi loads it as a context file in every session.
 
-This keeps the system prompt lean while still giving the model access to pi docs when needed.
+## SYSTEM.md
+
+Replaces pi's default system prompt with a trimmed version. pi still appends the
+date, working directory, skills, and context files.
+
+The tool list stays in step with what is actually installed, so it names the
+custom tools alongside the built-in four. Guidelines that a mechanism now
+enforces have been removed rather than restated: the prohibition on `sed` lives
+in `no-sed-edit.ts`, not in prose.
+
+## Extension: no-sed-edit.ts
+
+Blocks `bash` calls that edit a file with `sed` — either in place (`sed -i`) or
+by substituting into a redirect — and points at the `edit` tool instead. A rule
+the model can read is a rule the model can rationalize past; this one is
+enforced at the tool call.
+
+Scope is deliberately narrow. It does not cover `awk`, `perl -i`, or other
+rewrite tools.
 
 ## Reminder: read-fully.ts
 
-Tracks consecutive search operations (`rg`, `grep`, etc.) in bash calls. Every 2 consecutive searches, injects a system reminder nudging the agent to read files fully instead of relying on snippets.
+Counts consecutive search operations — `rg`, `grep`, and the `grep` tool. Every
+two in a row injects a reminder that searching is for locating files, and that
+once a file is found it should be read start to finish. Partial reads miss
+imports, types, control flow and helpers, which is exactly the context that
+makes an edit correct.
 
-## Knowledge Base
+Built on [pi-system-reminders](https://github.com/Michaelliv/pi-system-reminders).
 
-A [napkin](https://github.com/Michaelliv/napkin) vault at `~/.pi/agent/kb/` with automatic knowledge distillation.
+## Prompts
 
-### How it works
+Slash commands, loaded from `prompts/`.
 
-```
-Pi session (you + agent)
-        │
-        ├── napkin-context extension
-        │   Injects vault overview into the agent's context on session start.
-        │   The agent sees what's in the vault and can search/read it.
-        │
-        └── napkin-distill extension
-            Runs on a timer (every 60 min). Forks the conversation,
-            sends it to a cheap model (claude-sonnet-4-6), and distills
-            knowledge into the vault — decisions, architecture notes,
-            project context. /distill triggers it manually.
-```
-
-### Vault resolution
-
-Napkin's pi extensions resolve the vault in this order:
-
-1. **Local project vault** — walk up from cwd looking for `.napkin/`
-2. **Global fallback** — read `~/.pi/agent/napkin.json` for a default vault path
-
-This means project-specific vaults take priority when present, and the global `kb/` vault catches everything else.
-
-### Template
-
-Uses the `coding` template (decisions, architecture, guides, changelog) plus a custom `projects/` directory with a `Project` note template.
+| Command | Purpose |
+|---------|---------|
+| `/reread` | Reread every changed file in full, review for correctness and clarity, fix what is not pristine, then rerun the verification gates. |
+| `/taxonomy` | Audit for closed-set ownership drift — duplicated enums, parallel unions, rule sites that recreate knowledge owned elsewhere — and pin the repair with a test. |
 
 ## Settings
 
 | Setting | Value |
 |---------|-------|
-| Model | `claude-opus-4-6` |
-| Thinking | `low` |
-| Steering | `all` |
-| Follow-up | `all` |
+| Provider | `anthropic` |
+| Model | `claude-fable-5` |
+| Thinking | `medium` |
+| Theme | `dark` |
 
 ## Packages
 
+Most are local checkouts rather than published installs, so the source is
+editable in place.
+
 | Package | Source | What it does |
 |---------|--------|-------------|
-| [pi-napkin](https://github.com/Michaelliv/pi-napkin) | git | Napkin integration — vault context, kb_search/kb_read tools, distillation |
-| [pi-ask-user-question](https://github.com/Michaelliv/pi-ask-user-question) | git | Interactive multi-choice question tool |
-| [pi-charts](https://github.com/Michaelliv/pi-charts) | git | Chart rendering (bar, line, pie, scatter, radar, etc.) |
-| [pi-generative-ui](https://github.com/Michaelliv/pi-generative-ui) | git | Interactive HTML/SVG widgets in native macOS windows |
-| [pi-universal-view](https://github.com/Michaelliv/pi-universal-view) | git | Universal file viewer |
-| [pi-websearch-router](https://github.com/Michaelliv/pi-websearch) | npm | Web search with auto-detected provider |
-| [pi-system-reminders](https://github.com/Michaelliv/pi-system-reminders) | git | Reactive system reminders framework |
+| [pi-websearch-router](https://github.com/Michaelliv/pi-websearch) | local | Web search with auto-detected provider |
+| [pi-universal-view](https://github.com/Michaelliv/pi-universal-view) | local | Universal file viewer |
+| [pi-system-reminders](https://github.com/Michaelliv/pi-system-reminders) | local | Reactive system reminders framework |
+| [pi-ask-user-question](https://github.com/Michaelliv/pi-ask-user-question) | local | Interactive multi-choice question tool |
+| pi-runline | local | Runline actions — Linear, Shift Cloud, and the rest of the plugin surface |
+| pi-recall | local | Search across past pi conversations |
+| [pi-shift-mission-control](https://github.com/shift-labs-ai/pi-shift-mission-control) | local | Read-only navigation of the Shift Cloud Vex fleet |
+| [@shift-labs/pi-rlm](https://github.com/shift-labs-ai/pi-rlm) | npm | Replaces the tool surface with a single `execute` cell running real code |
 
 ## Install
 
 ```bash
-# Install pi and napkin
-npm i -g @mariozechner/pi-coding-agent
-npm i -g napkin-ai
+# Install pi
+npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+# or: curl -fsSL https://pi.dev/install.sh | sh
 
 # Clone this repo
 git clone https://github.com/Michaelliv/dotpi.git
 cd dotpi
 
-# Copy system prompt, extension, and reminder
-cp SYSTEM.md ~/.pi/agent/SYSTEM.md
-mkdir -p ~/.pi/agent/extensions ~/.pi/agent/reminders
-cp extensions/pi-docs.ts ~/.pi/agent/extensions/pi-docs.ts
-cp reminders/read-fully.ts ~/.pi/agent/reminders/read-fully.ts
-
-# Install packages
-pi install npm:pi-napkin
-pi install git:github.com/Michaelliv/pi-ask-user-question
-pi install git:github.com/Michaelliv/pi-charts
-pi install git:github.com/Michaelliv/pi-generative-ui
-pi install git:github.com/Michaelliv/pi-universal-view
-pi install npm:pi-websearch-router
-pi install git:github.com/Michaelliv/pi-system-reminders
-
-# Set up knowledge base
-cp napkin.json ~/.pi/agent/napkin.json
-napkin init --path ~/.pi/agent/kb --template coding
-mkdir -p ~/.pi/agent/kb/projects
-cp kb/projects/_about.md ~/.pi/agent/kb/projects/_about.md
-cp kb/Templates/Project.md ~/.pi/agent/kb/Templates/Project.md
-napkin --vault ~/.pi/agent/kb config set --key distill.enabled --value true
+# Copy the tracked config into place
+mkdir -p ~/.pi/agent/extensions ~/.pi/agent/reminders ~/.pi/agent/prompts
+cp AGENTS.md SYSTEM.md settings.json ~/.pi/agent/
+cp extensions/no-sed-edit.ts ~/.pi/agent/extensions/
+cp reminders/read-fully.ts ~/.pi/agent/reminders/
+cp prompts/*.md ~/.pi/agent/prompts/
 ```
+
+Runline needs its project root set on the machine, which is deliberately not
+tracked:
+
+```bash
+echo "{\"project\":\"$HOME/Projects/runline\"}" > ~/.pi/agent/runline.json
+```
+
+`settings.json` lists the packages by relative path from `~/.pi/agent`. Clone
+each into `~/Projects` before starting pi, or edit the list to match where they
+live. `pi install npm:@shift-labs/pi-rlm` handles the one published package.
 
 ## License
 

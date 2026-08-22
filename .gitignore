@@ -1,0 +1,12 @@
+# Credentials and machine state — never commit
+auth.json
+models.json
+runline.json
+trust.json
+keybindings.json
+sessions/
+recall/
+peers/
+npm/
+git/
+bin/

@@ -1,0 +1,18 @@
+{
+  "lastChangelogVersion": "0.80.7",
+  "theme": "dark",
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-fable-5",
+  "defaultThinkingLevel": "medium",
+  "packages": [
+    "../../Projects/pi-websearch/packages/pi-websearch-router",
+    "../../Projects/pi-universal-view",
+    "../../Projects/pi-system-reminders",
+    "../../Projects/pi-ask-user-question",
+    "../../Projects/runline/packages/pi-runline",
+    "../../Projects/pi-recall",
+    "../../Projects/pi-shift-mission-control",
+    "npm:@shift-labs/pi-rlm"
+  ],
+  "enabledModels": []
+}
