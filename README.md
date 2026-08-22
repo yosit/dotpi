@@ -97,9 +97,9 @@ editable in place.
 | [pi-universal-view](https://github.com/Michaelliv/pi-universal-view) | local | Universal file viewer |
 | [pi-system-reminders](https://github.com/Michaelliv/pi-system-reminders) | local | Reactive system reminders framework |
 | [pi-ask-user-question](https://github.com/Michaelliv/pi-ask-user-question) | local | Interactive multi-choice question tool |
-| pi-runline | local | Runline actions — Linear, Shift Cloud, and the rest of the plugin surface |
-| pi-recall | local | Search across past pi conversations |
-| [pi-shift-mission-control](https://github.com/shift-labs-ai/pi-shift-mission-control) | local | Read-only navigation of the Shift Cloud Vex fleet |
+| [pi-runline](https://github.com/Michaelliv/runline) | local | Runline actions — Linear, Shift Cloud, and the rest of the plugin surface |
+| [pi-recall](https://github.com/Michaelliv/pi-recall) | local | BM25 search across past pi conversations |
+| pi-shift-mission-control | local, private | Read-only navigation of the Shift Cloud Vex fleet |
 | [@shift-labs/pi-rlm](https://github.com/shift-labs-ai/pi-rlm) | npm | Replaces the tool surface with a single `execute` cell running real code |
 
 ## Install
@@ -121,16 +121,37 @@ cp reminders/read-fully.ts ~/.pi/agent/reminders/
 cp prompts/*.md ~/.pi/agent/prompts/
 ```
 
-Runline needs its project root set on the machine, which is deliberately not
-tracked:
+### Packages
+
+`settings.json` refers to most packages by path relative to `~/.pi/agent`, which
+resolves to `~/Projects`. Clone them there before starting pi, or edit the list
+to match where they live.
 
 ```bash
+mkdir -p ~/Projects && cd ~/Projects
+git clone git@github.com:Michaelliv/pi-websearch.git
+git clone git@github.com:Michaelliv/pi-universal-view.git
+git clone git@github.com:Michaelliv/pi-system-reminders.git
+git clone git@github.com:Michaelliv/pi-ask-user-question.git
+git clone git@github.com:Michaelliv/runline.git
+git clone git@github.com:Michaelliv/pi-recall.git
+```
+
+`pi-shift-mission-control` is private; clone it separately if you have access.
+
+Runline is a Bun monorepo and loads plugins from built output, so it needs a
+build before first use, plus a project root that is deliberately not tracked:
+
+```bash
+cd ~/Projects/runline && bun install && bun run build
 echo "{\"project\":\"$HOME/Projects/runline\"}" > ~/.pi/agent/runline.json
 ```
 
-`settings.json` lists the packages by relative path from `~/.pi/agent`. Clone
-each into `~/Projects` before starting pi, or edit the list to match where they
-live. `pi install npm:@shift-labs/pi-rlm` handles the one published package.
+The one npm-published package installs normally:
+
+```bash
+pi install npm:@shift-labs/pi-rlm
+```
 
 ## License
 
