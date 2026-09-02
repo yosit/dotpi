@@ -20,6 +20,9 @@ that are worth version control.
     └── taxonomy.md        # /taxonomy — find and fix closed-set ownership drift
 ```
 
+The repo also carries `tests/`, which is not copied into `~/.pi/agent`. See
+[Tests](#tests).
+
 Not tracked here: `auth.json` and `models.json` hold credentials; `runline.json`,
 `trust.json` and `keybindings.json` are machine-specific; and `sessions/`,
 `recall/`, `peers/`, `npm/`, `git/` and `bin/` are runtime state. All of it is
@@ -84,6 +87,8 @@ review. Terminates when a pass stops finding things to change.
 The block rejects the whole `bash` call, so `git add . && git commit` loses the
 staging along with the commit. Stage in a separate call and the retry is a bare
 re-run of the commit.
+
+Covered by [`tests/code-pride.test.ts`](tests/code-pride.test.ts).
 
 ## Reminder: read-fully.ts
 
@@ -179,6 +184,26 @@ The one npm-published package installs normally:
 ```bash
 pi install npm:@shift-labs/pi-rlm
 ```
+
+## Tests
+
+```bash
+bun test
+```
+
+No install step. The extensions import `ExtensionAPI` with `import type`, which
+is erased at runtime, so the tests run against the real source with nothing in
+`node_modules`.
+
+Extensions here are pure event machines — they read `tool_call` and
+`tool_result` and return a block decision — so a fake `ExtensionAPI` that
+records handlers and replays events covers them without a running pi. Each test
+builds its own instance, so no state leaks between cases.
+
+`tests/code-pride.test.ts` covers the state machine (block once, allow the
+retry, re-arm on a fix, reset after an allowed commit), which commands count as
+a commit, which file extensions are tracked, and the cases that must *not*
+fire: doc-only edits, failed edits, and non-bash tools.
 
 ## License
 
