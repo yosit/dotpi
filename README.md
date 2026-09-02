@@ -81,6 +81,10 @@ bare re-run always succeeds. Editing a code file clears the flag again, which
 re-arms the guard: if a review pass produces a fix, that fix earns its own
 review. Terminates when a pass stops finding things to change.
 
+The block rejects the whole `bash` call, so `git add . && git commit` loses the
+staging along with the commit. Stage in a separate call and the retry is a bare
+re-run of the commit.
+
 ## Reminder: read-fully.ts
 
 Counts consecutive search operations — `rg`, `grep`, and the `grep` tool. Every
