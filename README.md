@@ -11,7 +11,8 @@ that are worth version control.
 ├── SYSTEM.md              # Custom system prompt, replacing pi's default
 ├── settings.json          # Model, thinking level, installed packages
 ├── extensions/
-│   └── no-sed-edit.ts     # Refuses sed file edits; directs to the edit tool
+│   ├── no-sed-edit.ts     # Refuses sed file edits; directs to the edit tool
+│   └── code-pride.ts      # Blocks the first commit after edits, for a self-review pass
 ├── reminders/
 │   └── read-fully.ts      # Nudges toward full reads after repeated searching
 └── prompts/
@@ -57,6 +58,28 @@ enforced at the tool call.
 
 Scope is deliberately narrow. It does not cover `awk`, `perl -i`, or other
 rewrite tools.
+
+## Extension: code-pride.ts
+
+Tracks every code file written through `write` or `edit`, then blocks the first
+`git commit` that follows with a nudge to read each of those files in full —
+start to finish, not just the diff — and ask whether the result is clean,
+pristine, and worth being proud of. Re-running the commit goes through.
+
+This revives an earlier reminder of the same name. That version fired at
+`agent_end`, which is the wrong moment: the turn is over, so a nudge to fix
+something arrives with nothing left to act on. A commit is the better trigger.
+It is the point where code stops being a draft, it is under the agent's control,
+and blocking it leaves the fix in the same turn.
+
+The list names only files this agent wrote. It does not consult git, so hand
+edits and changes from earlier sessions are out of scope by design — the prompt
+is "re-read what you just wrote," not "review the diff."
+
+One block per round of edits. The block sets a flag that the retry clears, so a
+bare re-run always succeeds. Editing a code file clears the flag again, which
+re-arms the guard: if a review pass produces a fix, that fix earns its own
+review. Terminates when a pass stops finding things to change.
 
 ## Reminder: read-fully.ts
 
@@ -116,7 +139,7 @@ cd dotpi
 # Copy the tracked config into place
 mkdir -p ~/.pi/agent/extensions ~/.pi/agent/reminders ~/.pi/agent/prompts
 cp AGENTS.md SYSTEM.md settings.json ~/.pi/agent/
-cp extensions/no-sed-edit.ts ~/.pi/agent/extensions/
+cp extensions/*.ts ~/.pi/agent/extensions/
 cp reminders/read-fully.ts ~/.pi/agent/reminders/
 cp prompts/*.md ~/.pi/agent/prompts/
 ```
