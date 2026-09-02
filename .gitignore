@@ -10,3 +10,7 @@ peers/
 npm/
 git/
 bin/
+
+# Test runner output
+node_modules/
+bun.lockb
