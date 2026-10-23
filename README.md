@@ -16,7 +16,9 @@ that are worth version control.
 │   └── read-fully.ts      # Nudges toward full reads after repeated searching
 └── prompts/
     ├── reread.md          # /reread — reread changed code and bring it to standard
-    └── taxonomy.md        # /taxonomy — find and fix closed-set ownership drift
+    ├── taxonomy.md        # /taxonomy — find and fix closed-set ownership drift
+    └── progressive-disclosure-descriptions-for-vex.md
+                           # check plugin descriptions for Vex progressive disclosure
 ```
 
 Not tracked here: `auth.json` and `models.json` hold credentials; `runline.json`,
@@ -76,6 +78,7 @@ Slash commands, loaded from `prompts/`.
 |---------|---------|
 | `/reread` | Reread every changed file in full, review for correctness and clarity, fix what is not pristine, then rerun the verification gates. |
 | `/taxonomy` | Audit for closed-set ownership drift — duplicated enums, parallel unions, rule sites that recreate knowledge owned elsewhere — and pin the repair with a test. |
+| `/progressive-disclosure-descriptions-for-vex` | Check plugin action, table and field descriptions for progressive disclosure, as a Vex agent sees them. |
 
 ## Settings
 
